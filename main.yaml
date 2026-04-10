@@ -1,0 +1,26 @@
+name: Automate Sport Booking
+on:
+  schedule:
+    # Les serveurs GitHub utilisent l'heure UTC (19h01 Paris = 17h01 UTC en été)
+    - cron: '1 17 * * *' 
+  workflow_dispatch: # Permet de lancer le script manuellement pour tester
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+
+      - name: Run booking script
+        run: python script.py
