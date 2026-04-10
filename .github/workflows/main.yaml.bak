@@ -1,12 +1,13 @@
-name: Automate Sport Booking
+name: Sport Booking Bot
+
 on:
   schedule:
-    # Les serveurs GitHub utilisent l'heure UTC (19h01 Paris = 17h01 UTC en été)
+    # 17h30 UTC = 19h30 Paris (Heure d'été)
     - cron: '30 17 * * *'
-  workflow_dispatch: # Permet de lancer le script manuellement pour tester
+  workflow_dispatch: # Permet de lancer le test manuellement depuis l'onglet Actions
 
 jobs:
-  run-script:
+  book:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -16,11 +17,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm' # Accélère les lancements futurs
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci || npm install # npm ci est plus strict, on met un fallback au cas où
 
       - name: Install Playwright Browsers
+        # On utilise 'npx playwright' directement, GitHub gère généralement bien les droits
+        # si les dossiers 'node_modules' ne sont pas poussés manuellement.
         run: npx playwright install chromium --with-deps
 
       - name: Run Playwright tests

@@ -2,9 +2,8 @@ name: Sport Booking Bot
 
 on:
   schedule:
-    # 17h30 UTC = 19h30 Paris (Heure d'été)
     - cron: '30 17 * * *'
-  workflow_dispatch: # Permet de lancer le test manuellement depuis l'onglet Actions
+  workflow_dispatch:
 
 jobs:
   book:
@@ -17,15 +16,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm' # Accélère les lancements futurs
+          cache: 'npm' # Optimisation 1 : Cache les dépendances npm
+
+      - name: Cache Playwright Browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
-        run: npm ci || npm install # npm ci est plus strict, on met un fallback au cas où
+        run: npm ci
 
       - name: Install Playwright Browsers
-        # On utilise 'npx playwright' directement, GitHub gère généralement bien les droits
-        # si les dossiers 'node_modules' ne sont pas poussés manuellement.
+        # Optimisation 2 : N'installe les navigateurs QUE si le cache est vide
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright System Deps
+        # Cette étape installe les bibliothèques système manquantes (très rapide)
+        if: steps.cache-playwright.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run Playwright tests
         run: npx playwright test
