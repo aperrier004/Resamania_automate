@@ -16,7 +16,7 @@ const MY_SCHEDULE: { [key: number]: { name: string, time: string }[] } = {
 test('Inscription Automatique Sport J+8', async ({ page }) => {
   // --- PRÉPARATION DE LA DATE CIBLE (J+8) ---
   const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + 8);
+  targetDate.setDate(targetDate.getDate() + 7);
   const isoDate = targetDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
   const dayOfWeek = targetDate.getDay(); 
   const daysFrench = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
