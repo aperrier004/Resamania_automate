@@ -1,33 +1,67 @@
 import { test, expect } from '@playwright/test';
 
-test('Inscription cours J+8', async ({ page }) => {
-  // 1. Calcul de la date cible (J+8)
-  const target = new Date();
-  target.setDate(target.getDate() + 8);
+// 1. CONFIGURATION CORRIGÉE (0=Dimanche, 1=Lundi, etc.)
+const MY_SCHEDULE: { [key: number]: { name: string, time: string }[] } = {
+  1: [{ name: "Body Sculpt", time: "12:15" }, { name: "LM Core", time: "19:15" }], // Lundi
+  2: [{ name: "100% fessiers", time: "18:30" }],                                 // Mardi
+  3: [{ name: "TRX Circuit", time: "19:00" }],                                   // Mercredi
+  4: [{ name: "Cardio sculpt", time: "18:45" }],                                 // Jeudi
+  5: [                                                                           // Vendredi
+    { name: "Yoga Vinyasa niveau avancé", time: "12:15" }, 
+    { name: "Yoga Vinyasa niveau avancé", time: "18:15" }
+  ],
+  6: [                                                                           // Samedi
+    { name: "Yoga Vinyasa niveau avancé", time: "13:30" }, 
+    { name: "Méditation", time: "14:30" }
+  ],
+  // 0: [] (Dimanche)
+};
+
+test('Inscription Automatique Sport J+8', async ({ page }) => {
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + 8);
   
-  // Formatage : on s'adapte au format du site (ex: "18 avril 2026")
-  const day = target.getDate();
-  const month = target.toLocaleString('fr-FR', { month: 'long' });
-  const formattedDate = `${day} ${month}`; 
+  const isoDate = targetDate.toISOString().split('T')[0];
+  const dayOfWeek = targetDate.getDay(); 
 
-  console.log(`Cible : ${formattedDate}`);
+  const coursesToBook = MY_SCHEDULE[dayOfWeek];
 
-  // 2. Connexion (Utilisation des variables d'environnement pour la sécurité)
-  await page.goto('https://member.resamania.com/lscfitnforme');
-  await page.fill('input[type="email"]', process.env.USER_EMAIL!);
-  await page.fill('input[type="password"]', process.env.USER_PASSWORD!);
+  if (!coursesToBook || coursesToBook.length === 0) {
+    console.log("Pas de cours prévu dans 8 jours.");
+    return;
+  }
+
+  // Connexion (une seule fois pour tous les cours du jour)
+  await page.goto('https://member.resamania.com/lscfitnforme/login');
+  await page.fill('#login_step_login_username', process.env.USER_EMAIL!);
+  await page.fill('#_password', process.env.USER_PASSWORD!);
   await page.click('button[type="submit"]');
+  await page.waitForLoadState('networkidle');
 
-  // 3. Navigation et sélection
-  await page.goto('https://www.ton-site-de-sport.com/planning');
-  
-  // On cherche le conteneur qui contient notre date, puis le bouton dedans
-  // C'est ici qu'on utilise la puissance de Playwright
-  const courseRow = page.locator('.MuiBox-root', { hasText: 'Yoga' }) // Remplacez 'Yoga' par votre cours
-                        .filter({ hasText: formattedDate });
-  
-  await courseRow.getByRole('button', { name: /s'inscrire|réserver/i }).click();
+  // Boucle sur les cours du jour
+  for (const courseConfig of coursesToBook) {
+    console.log(`Tentative pour : ${courseConfig.name} à ${courseConfig.time}`);
+    
+    const targetUrl = `https://member.resamania.com/lscfitnforme/planning?club=%2Flscfitnforme%2Fclubs%2F985&startedAt=${isoDate}`;
+    await page.goto(targetUrl);
 
-  // 4. Vérification
-  await expect(page.getByText(/confirmation|succès/i)).toBeVisible();
+    // Recherche du bloc spécifique
+    const courseCard = page.locator('.MuiListItem-root', { hasText: courseConfig.time })
+                           .filter({ hasText: courseConfig.name });
+
+    const bookingButton = courseCard.getByRole('button', { name: /s'inscrire|réserver/i });
+
+    try {
+      await bookingButton.waitFor({ state: 'visible', timeout: 5000 });
+      await bookingButton.click();
+
+      const confirmBtn = page.getByRole('button', { name: "Confirmer" });
+      if (await confirmBtn.isVisible({ timeout: 3000 })) {
+          await confirmBtn.click();
+          console.log(`✅ Succès : ${courseConfig.name}`);
+      }
+    } catch (e) {
+      console.log(`❌ Échec ou déjà inscrit pour ${courseConfig.name}`);
+    }
+  }
 });
