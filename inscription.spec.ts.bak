@@ -14,8 +14,9 @@ const MY_SCHEDULE: { [key: number]: { name: string, time: string }[] } = {
 };
 
 
+test.setTimeout(90000);
+
 test('Inscription Automatique Sport J+8', async ({ page }) => {
-	test.setTimeout(120000);
   // --- PRÉPARATION DE LA DATE CIBLE (J+8) ---
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + 8);
@@ -96,7 +97,7 @@ test('Inscription Automatique Sport J+8', async ({ page }) => {
       
       // Si le bouton n'est pas encore là (ex: il est 18h59m59s), on attend 1s et on rafraîchit
       console.log("⏳ Bouton non disponible, nouvel essai...");
-      await page.waitForTimeout(2000); 
+      await page.waitForTimeout(1000); 
     }
 
     if (!isBooked) console.log(`❌ Échec final pour ${courseConfig.name} après 1 minute d'essais.`);
