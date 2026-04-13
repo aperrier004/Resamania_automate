@@ -13,10 +13,22 @@ const MY_SCHEDULE: { [key: number]: { name: string, time: string }[] } = {
   6: [{ name: "Yoga Vinyasa niveau avancé", time: "13:30" }, { name: "Méditation", time: "14:30" }],
 };
 
-
-test.setTimeout(90000);
+// Fonction pour attendre un temps aléatoire entre deux bornes (en ms)
+const randomWait = (min: number, max: number) => 
+  new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (max - min + 1) + min)));
 
 test('Inscription Automatique Sport J+8', async ({ page }) => {
+  test.setTimeout(120000);
+	
+  // --- CONFIGURATION "HUMAINE" ---
+  // On définit une taille d'écran standard
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  
+  // On change l'identité du navigateur pour ne pas dire "Playwright"
+  await page.context().setExtraHTTPHeaders({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+  });
+  
   // --- PRÉPARATION DE LA DATE CIBLE (J+8) ---
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + 8);
@@ -97,7 +109,7 @@ test('Inscription Automatique Sport J+8', async ({ page }) => {
       
       // Si le bouton n'est pas encore là (ex: il est 18h59m59s), on attend 1s et on rafraîchit
       console.log("⏳ Bouton non disponible, nouvel essai...");
-      await page.waitForTimeout(1000); 
+      await page.waitForTimeout(2000); 
     }
 
     if (!isBooked) console.log(`❌ Échec final pour ${courseConfig.name} après 1 minute d'essais.`);

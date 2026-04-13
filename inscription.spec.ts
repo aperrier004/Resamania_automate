@@ -13,9 +13,22 @@ const MY_SCHEDULE: { [key: number]: { name: string, time: string }[] } = {
   6: [{ name: "Yoga Vinyasa niveau avancé", time: "13:30" }, { name: "Méditation", time: "14:30" }],
 };
 
+// Fonction pour attendre un temps aléatoire entre deux bornes (en ms)
+const randomWait = (min: number, max: number) => 
+  new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (max - min + 1) + min)));
 
 test('Inscription Automatique Sport J+8', async ({ page }) => {
-	test.setTimeout(120000);
+  test.setTimeout(120000);
+	
+  // --- CONFIGURATION "HUMAINE" ---
+  // On définit une taille d'écran standard
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  
+  // On change l'identité du navigateur pour ne pas dire "Playwright"
+  await page.context().setExtraHTTPHeaders({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+  });
+  
   // --- PRÉPARATION DE LA DATE CIBLE (J+8) ---
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + 8);
@@ -35,10 +48,12 @@ test('Inscription Automatique Sport J+8', async ({ page }) => {
   // --- 2. CONNEXION ---
   await page.goto('https://member.resamania.com/lscfitnforme/login');
   await page.fill('#login_step_login_username', process.env.USER_EMAIL!);
+  await randomWait(1000, 3000); // Attend entre 1 et 3 secondes
   await page.click('#login_step_login_submit');
   
   await page.waitForSelector('#_password', { state: 'visible' });
   await page.fill('#_password', process.env.USER_PASSWORD!);
+  await randomWait(1000, 3000); // Attend entre 1 et 3 secondes
   await page.click('#submit');
   
   await page.waitForLoadState('networkidle');
@@ -77,6 +92,7 @@ test('Inscription Automatique Sport J+8', async ({ page }) => {
           }
 
           // Clic sur le bouton d'inscription de la carte
+		  await randomWait(1000, 3000); // Attend entre 1 et 3 secondes
           await targetButton.click({ force: true });
 
           // Gestion de la modale de confirmation finale
@@ -84,6 +100,7 @@ test('Inscription Automatique Sport J+8', async ({ page }) => {
           
           try {
             await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
+			await randomWait(1000, 3000); // Attend entre 1 et 3 secondes
             await confirmBtn.click();
             console.log(`🎉 SUCCÈS : Inscription validÉE pour ${courseConfig.name} !`);
             isBooked = true;
