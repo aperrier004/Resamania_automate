@@ -5,13 +5,13 @@ import { test } from '@playwright/test';
  * Index : 0=Dimanche, 1=Lundi, ..., 6=Samedi
  */
 const MY_SCHEDULE: { [key: number]: { name: string, time: string }[] } = {
+  0: [{ name: "LM Core", time: "11:00" }], 
   1: [{ name: "Body Sculpt", time: "12:15" }, { name: "LM Core", time: "19:15" }],
   2: [{ name: "100% fessiers", time: "18:30" }],
   3: [{ name: "TRX Circuit", time: "19:00" }],
   4: [{ name: "Cardio sculpt", time: "18:45" }],
   5: [{ name: "Yoga Vinyasa niveau avancé", time: "12:15" }, { name: "Yoga Vinyasa niveau avancé", time: "18:15" }],
   6: [{ name: "Yoga Vinyasa niveau avancé", time: "13:30" }, { name: "Méditation", time: "14:30" }],
-  //7: [{ name: "LM Core", time: "11:00" }],
 };
 
 // Fonction pour attendre un temps aléatoire entre deux bornes (en ms)
